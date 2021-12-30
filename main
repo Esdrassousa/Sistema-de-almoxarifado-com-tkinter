@@ -1,0 +1,296 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Dec 29 08:59:12 2021
+
+@author: forte
+"""
+
+
+
+from tkinter import *
+import tkinter as tk
+import mysql.connector
+from mysql.connector import errorcode
+import re
+
+class cadastramento():
+    
+    def __init__(self):
+    #     pass
+    
+    # def main(self):
+        self.janela = tk.Tk()
+        self.janela.title("CADASTRO")
+        
+        
+        ####CADASTRAR PRODUTO
+        lb_produto = tk.Label(self.janela, text="Nome do Produto")
+        # lb_produto.place(x =10, y =10)
+        lb_produto.grid(row=1,column=0, padx= 1, pady=10)
+
+        self.Tb_produto = tk.Entry(self.janela, width=40)
+        # self.Tb_produto.place(x =120, y =11)
+        self.Tb_produto.grid(row=1,column=1, padx= 10, pady=10, sticky="ns")
+        
+        lb_quant = tk.Label(self.janela, text="Quantidade")
+        # lb_quant.place(x =10, y =40)
+        lb_quant.grid(row=2,column=0, padx= 1, pady=10)
+        self.Tb_quant = tk.Entry(self.janela, width=20)
+        # self.Tb_quant.place(x =120, y =41)
+        self.Tb_quant.grid(row=2,column=1, padx= 1, pady=10)
+        
+        Bt_cadastrar = tk.Button(self.janela, width =20 , text="CADASTRAR" , command = self.cadatrar_componentes)
+        # Bt_cadastrar.place(x=10 , y = 80)
+        Bt_cadastrar.grid(row=3,column=0, padx= 1, pady=10)
+        
+        Bt_cadastrar = tk.Button(self.janela, width =20 , text="BUSCAR NOME" , command = self.busca_nome)
+        # Bt_cadastrar.place(x=10 , y = 80)
+        Bt_cadastrar.grid(row=3,column=1, padx= 1, pady=10)
+        
+        Bt_BUSCAR = tk.Button(self.janela, width =20 , text="BUSCAR" , command = self.chama_banco)
+        # Bt_BUSCAR.place(x=10 , y = 110)
+        Bt_BUSCAR.grid(row=4,column=0, padx= 1, pady=10)
+        
+        Bt_DELETAR = tk.Button(self.janela, width =20 , text="DELETAR" , command = self.excluir_dados)
+        # Bt_BUSCAR.place(x=10 , y = 110)
+        Bt_DELETAR.grid(row=4,column=1, padx= 1, pady=10)
+        
+        frame_main = tk.Frame(self.janela, bg="gray")
+        frame_main.grid(sticky='news')
+
+
+
+        # Create a frame for the canvas with non-zero row&column weights
+        self.frame_canvas = tk.Frame(frame_main)
+        # self.frame_canvas.place(x=10 , y = 130)
+        self.frame_canvas.grid(row=5, column=0, sticky='nw')
+        self.frame_canvas.grid_rowconfigure(0, weight=1)
+        self.frame_canvas.grid_columnconfigure(0, weight=1)
+        # Set grid_propagate to False to allow 5-by-5 buttons resizing later
+        self.frame_canvas.grid_propagate(False)
+        self.canvas = tk.Canvas(self.frame_canvas)
+        self.canvas.grid(row=0, column=0, sticky="news")
+
+        # Link a scrollbar to the canvas
+        self.vsb = tk.Scrollbar(self.frame_canvas, orient="vertical", command=self.canvas.yview)
+        self.vsb.grid(row=0, column=1, sticky='ns')
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        # Create a frame to contain the buttons
+        self.frame_buttons = tk.Frame(self.canvas)
+        self.canvas.create_window((0, 0), window=self.frame_buttons, anchor='nw')
+        
+        # self.janela.geometry("600x300+200+200")
+        self.janela.mainloop()
+    def chama_banco(self):
+       
+        try:
+            
+ 	        db_connection = mysql.connector.connect(host='localhost', port ="3306", user='root', password='', database='cadastro')
+ 	        print("Database connection made!")
+        except mysql.connector.Error as error:
+ 	        if error.errno == errorcode.ER_BAD_DB_ERROR:
+		          print("Database doesn't exist")
+ 	        elif error.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+		          print("User name or password is wrong")
+ 	        else:
+		          print(error)
+        # else:
+ 	      #   db_connection.close()
+
+
+        cursor = db_connection.cursor()
+        comando_SQL  = "SELECT * FROM cadastro_produtos"
+        
+        cursor.execute(comando_SQL)
+        dados_lidos = cursor.fetchall()
+        print(dados_lidos)
+        linhas = len(dados_lidos)
+        
+        
+        lb = tk.Label(self.frame_buttons, text="NOME",width=53)
+        lb.grid(row=5,column=0 )
+
+        lb = tk.Label(self.frame_buttons, text="QTD",width=5)
+        lb.grid(row=5,column=1)
+
+        
+        for i in range(linhas): #Rows
+                k = i+6
+           
+                print("o valode de dados é: ", dados_lidos[i][1])
+                
+                b1 = Entry(self.frame_buttons, text="", width=60)
+                b2 = Entry(self.frame_buttons, text="", width=5)
+                
+                b1.grid(row=k, column=0)
+                b2.grid(row=k, column=1)
+               
+                b1.insert(END, dados_lidos[i][0])
+                b2.insert(END, dados_lidos[i][1])
+                
+        first5columns_width = b1.winfo_width() +400
+        first5rows_height = b1.winfo_height() +100       
+        self.frame_buttons.update_idletasks()
+        self.frame_canvas.config(width=first5columns_width,
+                            height=first5rows_height)
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+        
+        first5columns_width = b2.winfo_width()+400
+        print('first5columns_width: ', first5columns_width)
+        first5rows_height = b2.winfo_height() + 100       
+        self.frame_buttons.update_idletasks()
+        self.frame_canvas.config(width=first5columns_width,
+                            height=first5rows_height)
+        self.canvas.config(scrollregion=self.canvas.bbox("all"))
+                
+    def busca_nome(self):
+        
+       # self.frame_buttons.grid_forget()
+       # self.frame_canvas.grid_forget()
+       # self.frame_canvas.delete("all")
+       nomePro = self.Tb_produto.get()
+      
+       nomePro = nomePro.lstrip()
+       nomePro = nomePro.upper()
+       
+       nomePro = (nomePro + "%")
+       try:
+           
+	        db_connection = mysql.connector.connect(host='localhost', port ="3306", user='root', password='', database='cadastro')
+	        print("Database connection made!")
+       except mysql.connector.Error as error:
+	        if error.errno == errorcode.ER_BAD_DB_ERROR:
+	          print("Database doesn't exist")
+	        elif error.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+	          print("User name or password is wrong")
+	        else:
+	          print(error)
+      
+
+       
+       cursor = db_connection.cursor()
+       
+       nomePro = ('%a'%(nomePro))
+       
+       
+       # nomePro= re.sub(r"^\s+|\s+$", "", nomePro)
+       
+       f = "SELECT nome, qtd FROM cadastro_produtos WHERE nome LIKE "
+       s = (''+f+ nomePro+'')
+       print(s)
+       cursor.execute(s)
+       # db_connection.commit()
+       
+       dados_lidos = cursor.fetchall()
+       linhas = len(dados_lidos)
+       print(dados_lidos)
+       
+       lb = tk.Label(self.frame_buttons, text="NOME",width=53)
+       lb.grid(row=5,column=0 )
+
+       lb = tk.Label(self.frame_buttons, text="QTD",width=5)
+       lb.grid(row=5,column=1)
+
+       
+       for i in range(linhas): #Rows
+               k = i+6
+          
+               print("o valode de dados é: ", dados_lidos[i][1])
+               
+               b1 = Entry(self.frame_buttons, text="", width=60)
+               b2 = Entry(self.frame_buttons, text="", width=5)
+               
+               b1.grid(row=k, column=0)
+               b2.grid(row=k, column=1)
+              
+               b1.insert(END, dados_lidos[i][0])
+               b2.insert(END, dados_lidos[i][1])
+               
+       first5columns_width = b1.winfo_width() +400
+       first5rows_height = b1.winfo_height() +100       
+       self.frame_buttons.update_idletasks()
+       self.frame_canvas.config(width=first5columns_width,
+                           height=first5rows_height)
+       self.canvas.config(scrollregion=self.canvas.bbox("all"))
+       
+       first5columns_width = b2.winfo_width()+400
+       print('first5columns_width: ', first5columns_width)
+       first5rows_height = b2.winfo_height() + 100       
+       self.frame_buttons.update_idletasks()
+       self.frame_canvas.config(width=first5columns_width,
+                           height=first5rows_height)
+       self.canvas.config(scrollregion=self.canvas.bbox("all"))
+          
+            
+    def excluir_dados(self):
+        nomePro = self.Tb_produto.get()
+        # print(nomePro)
+        nomePro = nomePro.lstrip()
+        nomePro = nomePro.upper()
+        try:
+            
+ 	        db_connection = mysql.connector.connect(host='localhost', port ="3306", user='root', password='', database='cadastro')
+ 	        print("Database connection made!")
+        except mysql.connector.Error as error:
+ 	        if error.errno == errorcode.ER_BAD_DB_ERROR:
+		          print("Database doesn't exist")
+ 	        elif error.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+		          print("User name or password is wrong")
+ 	        else:
+		          print(error)
+       
+
+        
+        cursor = db_connection.cursor()
+        
+        nomePro = ('%a'%(nomePro))
+        
+        
+        # nomePro= re.sub(r"^\s+|\s+$", "", nomePro)
+        
+        f = "DELETE FROM cadastro_produtos WHERE nome="
+        s = (''+f+ nomePro+'')
+        print(s)
+        cursor.execute(s)
+        db_connection.commit()
+        cursor.execute("select nome from cadastro_produtos")
+        dados_lidos = cursor.fetchall()
+        self.Tb_produto.delete(0,"end")
+        self.Tb_produto.insert(0, "")
+        self.Tb_quant.delete(0,"end")
+        self.Tb_quant.insert(0, "")
+    def cadatrar_componentes(self):
+        
+        nomePro = self.Tb_produto.get()
+        nomePro = nomePro.upper()
+        print(nomePro)
+        qtdPro = self.Tb_quant.get()
+        print(qtdPro)
+        
+        try:
+            
+ 	        db_connection = mysql.connector.connect(host='localhost', port ="3306", user='root', password='', database='cadastro')
+ 	        print("Database connection made!")
+        except mysql.connector.Error as error:
+ 	        if error.errno == errorcode.ER_BAD_DB_ERROR:
+		          print("Database doesn't exist")
+ 	        elif error.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+		          print("User name or password is wrong")
+ 	        else:
+		          print(error)
+       
+
+
+        cursor = db_connection.cursor()
+        comando_SQL  = "insert into cadastro_produtos (nome, qtd) VALUES (%s,%s)"
+        dados = (str(nomePro), str(qtdPro))
+        cursor.execute(comando_SQL, dados)
+        db_connection.commit()
+
+        
+        self.Tb_produto.delete(0,"end")
+        self.Tb_produto.insert(0, "")
+        self.Tb_quant.delete(0,"end")
+        self.Tb_quant.insert(0, "")
+cadastramento()
